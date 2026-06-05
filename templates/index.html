@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTACPred — SE3AF v3.9 Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://3dmol.org/build/3Dmol-min.js" defer></script>
+</head>
+<body>
+<div class="layout">
+
+<!-- ═══════════════════ SIDEBAR ════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <i class="fas fa-atom"></i>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item active" href="/" title="Dashboard">
+      <i class="fas fa-house"></i>
+      <span class="tooltip">Dashboard</span>
+    </a>
+    <a class="nav-item" href="/experiments" title="Experiments">
+      <i class="fas fa-flask"></i>
+      <span class="tooltip">Experiments</span>
+    </a>
+    <a class="nav-item" href="/history_page" title="History">
+      <i class="fas fa-clock-rotate-left"></i>
+      <span class="tooltip">History</span>
+    </a>
+    <a class="nav-item" href="/datasets" title="Datasets">
+      <i class="fas fa-database"></i>
+      <span class="tooltip">Datasets</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+
+    <a class="nav-item" href="/reports_page" title="Analytics">
+      <i class="fas fa-chart-line"></i>
+      <span class="tooltip">Analytics</span>
+    </a>
+    <a class="nav-item" href="/reports_page" title="Reports">
+      <i class="fas fa-file-contract"></i>
+      <span class="tooltip">Reports</span>
+    </a>
+    <a class="nav-item" href="#" title="Documentation">
+      <i class="fas fa-book-open"></i>
+      <span class="tooltip">Documentation</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a class="nav-item" href="#" title="Settings">
+      <i class="fas fa-gear"></i>
+      <span class="tooltip">Settings</span>
+    </a>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ════════════════════════════════════ -->
+<div class="main-wrapper">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-icon"><i class="fas fa-atom"></i></div>
+      <span class="topbar-brand-name">PROTACPred</span>
+      <span class="topbar-brand-badge">v2.0</span>
+    </div>
+    <span style="font-size:12px;color:var(--text-muted);margin-right:8px">AI-Powered Degradation Predictor</span>
+
+    <nav class="topbar-nav">
+      <a class="topbar-nav-item active" href="/"><i class="fas fa-house"></i> Dashboard</a>
+      <a class="topbar-nav-item" href="/history_page"><i class="fas fa-clock-rotate-left"></i> History</a>
+      <a class="topbar-nav-item" href="/datasets"><i class="fas fa-database"></i> Datasets</a>
+      <a class="topbar-nav-item" href="/reports_page"><i class="fas fa-file-contract"></i> Docs</a>
+    </nav>
+
+    <div class="topbar-actions">
+      <div id="model-status-badge" class="model-status-inline unloaded">
+        <span class="status-dot"></span> <span id="model-status-text">Not Loaded</span>
+      </div>
+      <button onclick="newPrediction()" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus"></i> New Prediction
+      </button>
+      <button class="topbar-icon-btn" title="Settings"><i class="fas fa-gear"></i></button>
+      <div class="topbar-avatar">R</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- STATS BAR -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-card">
+        <div class="stat-card-icon purple"><i class="fas fa-atom"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val" id="stat-total-pred">0</div>
+          <div class="stat-card-label">Total Predictions</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val" id="stat-degraders">0</div>
+          <div class="stat-card-label">Degraders Found</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon orange"><i class="fas fa-database"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val">{{ dataset_size }}</div>
+          <div class="stat-card-label">Training Samples</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon blue"><i class="fas fa-brain"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val">{{ auroc }}</div>
+          <div class="stat-card-label">Val AUROC</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title">PROTAC Degradation Prediction</div>
+        <div class="page-subtitle">Predict the likelihood of target protein degradation by a given PROTAC molecule</div>
+      </div>
+      <div class="page-header-actions">
+        <button id="btn-load-model" class="btn btn-secondary btn-sm" onclick="loadModel()">
+          <i class="fas fa-play"></i> Load Model
+        </button>
+        <button onclick="loadRandomSample()" class="btn btn-secondary btn-sm">
+          <i class="fas fa-shuffle"></i> Random Sample
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="dashboard-grid">
+
+      <!-- ════ LEFT: INPUT PANEL ════ -->
+      <div class="input-panel">
+
+        <!-- Tabs: Single / Batch -->
+        <div class="tab-bar" style="margin-bottom:14px">
+          <button class="tab-btn active" onclick="switchInputTab('single',this)">Single</button>
+          <button class="tab-btn" onclick="switchInputTab('batch',this)">Batch CSV</button>
+          <button class="tab-btn" onclick="switchInputTab('explore',this)">Explorer</button>
+        </div>
+
+        <!-- Single Prediction Tab -->
+        <div id="tab-single" class="tab-panel active">
+          <p class="input-section-label">INPUTS</p>
+
+          <!-- PROTAC Structure Card -->
+          <div class="mol-card">
+            <div class="mol-card-header">
+              <div class="mol-status-dot empty" id="dot-protac"></div>
+              <div>
+                <div class="mol-card-title">PROTAC Structure</div>
+                <div class="mol-card-sub">Enter SMILES or load a file</div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:8px">
+              <textarea id="protac-smiles" class="form-control" rows="2"
+                placeholder="Paste PROTAC SMILES…" style="font-family:monospace;font-size:11px"
+                oninput="onSmilesChange('protac')"></textarea>
+            </div>
+            <div class="mol-preview" id="preview-protac">
+              <div class="mol-preview-placeholder">
+                <i class="fas fa-atom"></i>
+                <span>PROTAC 3D preview</span>
+              </div>
+            </div>
+            <div class="mol-card-actions">
+              <button class="btn-view3d" onclick="viewSmiles3D('protac')">
+                <i class="fas fa-cube"></i> View 3D
+              </button>
+            </div>
+          </div>
+
+          <!-- Target Protein Card -->
+          <div class="mol-card">
+            <div class="mol-card-header">
+              <div class="mol-status-dot empty" id="dot-target" style="background:#818CF8"></div>
+              <div>
+                <div class="mol-card-title">Target Protein</div>
+                <div class="mol-card-sub">UniProt ID or PDB Structure</div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:6px">
+              <input id="target-uniprot" class="form-control" placeholder="UniProt ID (e.g. P04637)"
+                     oninput="onUniprotChange('target')">
+            </div>
+            <div class="form-group" style="margin-bottom:8px">
+              <textarea id="target-seq" class="form-control" rows="2"
+                placeholder="Protein sequence (optional)…" style="font-family:monospace;font-size:11px"></textarea>
+            </div>
+            <div class="mol-preview" id="preview-target">
+              <div class="mol-preview-placeholder">
+                <i class="fas fa-protein"></i>
+                <span>Target structure</span>
+              </div>
+            </div>
+            <div class="mol-card-actions">
+              <button class="btn-view3d" onclick="fetchAlphaFold('target')">
+                <i class="fas fa-cloud-download-alt"></i> Fetch AF
+              </button>
+              <button class="btn-view3d" onclick="viewProtein('target')">
+                <i class="fas fa-cube"></i> View 3D
+              </button>
+            </div>
+          </div>
+
+          <!-- E3 Ligase Card -->
+          <div class="mol-card">
+            <div class="mol-card-header">
+              <div class="mol-status-dot" id="dot-ligase" style="background:#34D399"></div>
+              <div>
+                <div class="mol-card-title">E3 Ligase</div>
+                <div class="mol-card-sub">UniProt ID or PDB Structure</div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:6px">
+              <input id="ligase-uniprot" class="form-control" placeholder="UniProt ID (e.g. Q9Y4L1)"
+                     oninput="onUniprotChange('ligase')">
+            </div>
+            <div class="form-group" style="margin-bottom:8px">
+              <textarea id="e3-seq" class="form-control" rows="2"
+                placeholder="E3 ligase sequence (optional)…" style="font-family:monospace;font-size:11px"></textarea>
+            </div>
+            <div class="mol-card-actions">
+              <button class="btn-view3d" onclick="fetchAlphaFold('ligase')">
+                <i class="fas fa-cloud-download-alt"></i> Fetch AF
+              </button>
+              <button class="btn-view3d" onclick="viewProtein('ligase')">
+                <i class="fas fa-cube"></i> View 3D
+              </button>
+            </div>
+          </div>
+
+          <!-- Advanced (optional warhead/linker) -->
+          <details style="margin-bottom:10px">
+            <summary style="font-size:12px;color:var(--text-muted);cursor:pointer;padding:4px 0;">
+              <i class="fas fa-sliders-h"></i> Advanced Options
+            </summary>
+            <div style="margin-top:8px">
+              <div class="form-group">
+                <label class="form-label">Warhead SMILES</label>
+                <input id="warhead-smiles" class="form-control" placeholder="Warhead fragment SMILES">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Linker SMILES</label>
+                <input id="linker-smiles" class="form-control" placeholder="Linker fragment SMILES">
+              </div>
+              <div class="form-group">
+                <label class="form-label">E3 Ligase SMILES</label>
+                <input id="e3-smiles" class="form-control" placeholder="E3 binder SMILES">
+              </div>
+            </div>
+          </details>
+
+          <button id="btn-predict" class="btn btn-primary btn-full" onclick="runPrediction()">
+            <i class="fas fa-bolt"></i> Run Prediction
+          </button>
+          <div id="predict-progress" class="hidden" style="margin-top:8px">
+            <div class="progress-wrap">
+              <div class="progress-label"><span>Running SE3AF v3.9…</span><span id="pred-pct">—</span></div>
+              <div class="progress-track"><div class="progress-fill" id="pred-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Batch Tab -->
+        <div id="tab-batch" class="tab-panel">
+          <div class="upload-zone" id="batch-drop" onclick="document.getElementById('batch-file').click()"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleBatchDrop(event)">
+            <i class="fas fa-file-csv"></i>
+            <p><strong>Drag & drop CSV here</strong>
+            PDB or SDF format also accepted</p>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px">Browse Files</button>
+            <input type="file" id="batch-file" accept=".csv" onchange="handleBatchFile(this)">
+          </div>
+          <div id="batch-progress" class="hidden" style="margin-top:10px">
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span id="batch-status-txt">Uploading…</span>
+                <span id="batch-pct">0%</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" id="batch-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="batch-results" class="hidden" style="margin-top:12px">
+            <div class="card-title" style="margin-bottom:8px">Batch Results</div>
+            <div class="batch-table-wrap">
+              <table class="compound-table" id="batch-table">
+                <thead><tr>
+                  <th>#</th><th>SMILES</th><th>Score</th><th>Label</th>
+                </tr></thead>
+                <tbody id="batch-tbody"></tbody>
+              </table>
+            </div>
+            <button class="btn btn-secondary btn-sm w-full mt-2" onclick="exportBatchCSV()">
+              <i class="fas fa-download"></i> Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Explorer Tab -->
+        <div id="tab-explore" class="tab-panel">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+            Click a compound to load it into the viewer
+          </div>
+          <div id="explorer-empty" class="empty-state">
+            <i class="fas fa-table"></i>
+            <p>Run a batch prediction to see compounds here</p>
+          </div>
+          <div id="explorer-wrap" class="hidden">
+            <table class="compound-table" id="explorer-table">
+              <thead><tr>
+                <th>Compound</th><th>Score</th><th>Conf.</th><th>Status</th>
+              </tr></thead>
+              <tbody id="explorer-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <!-- end left col -->
+
+      <!-- ════ CENTER: 3D VIEWER + DETAILS ════ -->
+      <div>
+        <div class="viewer-panel">
+          <!-- Viewer toolbar -->
+          <div class="viewer-toolbar">
+            <div class="viewer-mode-tabs">
+              <button class="view-tab active" onclick="setViewMode('complex',this)">Complex View</button>
+              <button class="view-tab" onclick="setViewMode('protac',this)">PROTAC Only</button>
+              <button class="view-tab" onclick="setViewMode('target',this)">Target Only</button>
+              <button class="view-tab" onclick="setViewMode('ligase',this)">Ligase Only</button>
+            </div>
+            <div class="viewer-actions">
+              <button class="viewer-action-btn" title="Rotate" onclick="viewer_reset()"><i class="fas fa-rotate"></i></button>
+              <button class="viewer-action-btn" title="Fullscreen" onclick="viewer_fullscreen()"><i class="fas fa-expand"></i></button>
+              <button class="viewer-action-btn" title="Zoom in" onclick="viewer_zoom(1.3)"><i class="fas fa-search-plus"></i></button>
+              <button class="viewer-action-btn" title="Zoom out" onclick="viewer_zoom(0.7)"><i class="fas fa-search-minus"></i></button>
+            </div>
+          </div>
+
+          <!-- 3D Viewer container -->
+          <div class="viewer-container" id="viewer-container">
+            <div id="mol-viewer" style="width:100%;height:100%"></div>
+            <div id="viewer-loading" class="loading-overlay hidden">
+              <div class="spinner spinner-lg"></div>
+              <p>Loading structure…</p>
+            </div>
+            <div id="viewer-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text-muted)">
+              <i class="fas fa-atom" style="font-size:48px;opacity:.15"></i>
+              <p style="font-size:13px">Enter SMILES and run a prediction to see the 3D structure</p>
+            </div>
+          </div>
+
+          <!-- Style bar -->
+          <div class="style-bar">
+            <span class="style-label">Style:</span>
+            <button class="style-btn active" onclick="setStyleMode('surface',this)">Surface</button>
+            <button class="style-btn" onclick="setStyleMode('cartoon',this)">Cartoon</button>
+            <button class="style-btn" onclick="setStyleMode('stick',this)">Stick</button>
+            <button class="style-btn" onclick="setStyleMode('ballstick',this)">Ball-and-Stick</button>
+          </div>
+
+          <!-- Legend -->
+          <div class="viewer-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#818CF8"></div> Target Protein
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#6366F1"></div> PROTAC
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#34D399"></div> E3 Ligase
+            </div>
+          </div>
+
+          <!-- Hints -->
+          <div class="viewer-hints">
+            <span><i class="fas fa-arrows-alt"></i> Click and drag to rotate</span>
+            <span>·</span>
+            <span><i class="fas fa-search"></i> Scroll to zoom</span>
+            <span>·</span>
+            <span><i class="fas fa-sync"></i> Double click to reset</span>
+          </div>
+        </div>
+
+        <!-- Molecular Details -->
+        <div class="mol-details" id="mol-details-panel">
+          <div class="mol-details-title">Molecular Details</div>
+          <div class="mol-details-grid">
+            <!-- PROTAC Details -->
+            <div class="mol-detail-col">
+              <div class="mol-detail-col-header" style="color:#6366F1">PROTAC</div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Molecular Weight</span>
+                <span class="mol-detail-val" id="md-mw">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Atoms</span>
+                <span class="mol-detail-val" id="md-atoms">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Formula</span>
+                <span class="mol-detail-val" id="md-formula">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">TPSA</span>
+                <span class="mol-detail-val" id="md-tpsa">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">LogP</span>
+                <span class="mol-detail-val" id="md-logp">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Rot. Bonds</span>
+                <span class="mol-detail-val" id="md-rotbonds">—</span>
+              </div>
+            </div>
+            <!-- Target Details -->
+            <div class="mol-detail-col">
+              <div class="mol-detail-col-header" style="color:#818CF8">Target Protein</div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">PDB ID</span>
+                <span class="mol-detail-val" id="md-target-pdb">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Residues</span>
+                <span class="mol-detail-val" id="md-target-res">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">UniProt</span>
+                <span class="mol-detail-val" id="md-target-uniprot">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Avg pLDDT</span>
+                <span class="mol-detail-val" id="md-target-plddt">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">High Conf.</span>
+                <span class="mol-detail-val" id="md-target-conf">—</span>
+              </div>
+            </div>
+            <!-- Ligase Details -->
+            <div class="mol-detail-col">
+              <div class="mol-detail-col-header" style="color:#34D399">E3 Ligase</div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">PDB ID</span>
+                <span class="mol-detail-val" id="md-ligase-pdb">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Residues</span>
+                <span class="mol-detail-val" id="md-ligase-res">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">UniProt</span>
+                <span class="mol-detail-val" id="md-ligase-uniprot">—</span>
+              </div>
+              <div class="mol-detail-row">
+                <span class="mol-detail-key">Avg pLDDT</span>
+                <span class="mol-detail-val" id="md-ligase-plddt">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- end center col -->
+
+      <!-- ════ RIGHT: RESULT PANEL ════ -->
+      <div class="result-panel">
+
+        <!-- Prediction Result -->
+        <div class="pred-result-card" id="result-card">
+          <div class="pred-result-label">PREDICTION RESULT</div>
+
+          <div id="result-empty" class="empty-state" style="padding:30px 10px">
+            <i class="fas fa-flask" style="font-size:32px;opacity:.2"></i>
+            <p>Run a prediction to see results here</p>
+          </div>
+
+          <div id="result-content" class="hidden">
+            <div class="pred-result-title">Degradation Likelihood</div>
+            <div class="pred-score-big" id="res-score">—</div>
+
+            <div class="score-bar-wrap">
+              <div class="score-bar-labels"><span>0%</span><span>50%</span><span>100%</span></div>
+              <div class="score-bar-track">
+                <div class="score-bar-pointer" id="score-pointer" style="left:0%"></div>
+              </div>
+            </div>
+
+            <div class="pred-badge badge-unknown" id="res-badge">
+              <i class="fas fa-circle-check"></i> <span id="res-badge-text">—</span>
+            </div>
+
+            <div class="pred-metrics-row">
+              <span class="pred-metric-label">Model Confidence</span>
+              <span class="pred-metric-val" id="res-confidence">—</span>
+            </div>
+            <div class="confidence-bar-track">
+              <div class="confidence-bar-fill" id="conf-bar" style="width:0%"></div>
+            </div>
+
+            <div class="pred-metrics-row" style="margin-top:8px">
+              <span class="pred-metric-label">Method</span>
+              <span class="pred-metric-val text-sm" id="res-method">—</span>
+            </div>
+            <div class="pred-metrics-row">
+              <span class="pred-metric-label">Stability Score</span>
+              <span class="pred-metric-val" id="res-stability">—</span>
+            </div>
+            <div class="pred-metrics-row">
+              <span class="pred-metric-label">Interaction Score</span>
+              <span class="pred-metric-val" id="res-interaction">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanation -->
+        <div class="explanation-panel" id="explanation-panel">
+          <div class="card-title mb-3">
+            <i class="fas fa-lightbulb"></i> Explanation
+          </div>
+          <p class="explanation-text" id="explanation-text">
+            Enter a PROTAC SMILES and run a prediction to generate an AI explanation.
+          </p>
+        </div>
+
+        <!-- Key Interactions -->
+        <div class="interactions-panel" id="interactions-panel">
+          <div class="card-title mb-3">
+            <i class="fas fa-project-diagram"></i> Key Interactions
+          </div>
+          <div class="interaction-row">
+            <span class="interaction-label">
+              <span class="interaction-dot" style="background:#818CF8"></span>
+              Target–PROTAC
+            </span>
+            <span class="interaction-count" id="int-target">—</span>
+          </div>
+          <div class="interaction-row">
+            <span class="interaction-label">
+              <span class="interaction-dot" style="background:#34D399"></span>
+              Ligase–PROTAC
+            </span>
+            <span class="interaction-count" id="int-ligase">—</span>
+          </div>
+          <div class="interaction-row">
+            <span class="interaction-label">
+              <span class="interaction-dot" style="background:#F59E0B"></span>
+              Ternary Contacts
+            </span>
+            <span class="interaction-count" id="int-ternary">—</span>
+          </div>
+        </div>
+
+        <!-- Protein Info -->
+        <div class="card" id="protein-info-panel" style="margin-bottom:14px">
+          <div class="card-title mb-3">
+            <i class="fas fa-dna"></i> Protein Information
+          </div>
+          <div class="protein-info-grid">
+            <div class="protein-card">
+              <div class="protein-card-title">
+                <div class="dot" style="background:#818CF8"></div> Target
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">UniProt</span>
+                <span class="protein-stat-val" id="prot-target-uniprot">—</span>
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">AlphaFold</span>
+                <span class="protein-stat-val" id="prot-target-af">—</span>
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">Residues</span>
+                <span class="protein-stat-val" id="prot-target-res">—</span>
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">Avg pLDDT</span>
+                <span class="protein-stat-val" id="prot-target-plddt">—</span>
+              </div>
+            </div>
+            <div class="protein-card">
+              <div class="protein-card-title">
+                <div class="dot" style="background:#34D399"></div> E3 Ligase
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">UniProt</span>
+                <span class="protein-stat-val" id="prot-ligase-uniprot">—</span>
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">AlphaFold</span>
+                <span class="protein-stat-val" id="prot-ligase-af">—</span>
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">Residues</span>
+                <span class="protein-stat-val" id="prot-ligase-res">—</span>
+              </div>
+              <div class="protein-stat">
+                <span class="protein-stat-key">Avg pLDDT</span>
+                <span class="protein-stat-val" id="prot-ligase-plddt">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download Report -->
+        <button class="btn-download" onclick="downloadReport()">
+          <i class="fas fa-download"></i> Download Report
+        </button>
+
+      </div>
+      <!-- end right col -->
+    </div>
+    <!-- end dashboard-grid -->
+
+  </main>
+
+  <footer class="footer">
+    PROTACPred v2.0 · Advancing Targeted Protein Degradation Research <i class="fas fa-heart"></i>
+  </footer>
+</div>
+<!-- end main-wrapper -->
+</div>
+<!-- end layout -->
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script src="{{ url_for('static', filename='js/prediction.js') }}"></script>
+</body>
+</html>

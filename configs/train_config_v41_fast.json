@@ -1,0 +1,82 @@
+{
+  "_comment": "SE3AF v4.1 — Fast validation config for CI/test suite (5 epochs, small dims)",
+  "_version": "4.1.0",
+
+  "backend": "se3",
+  "epochs": 5,
+  "batch_size": 8,
+  "learning_rate": 1e-3,
+  "weight_decay": 2e-4,
+  "grad_clip": 1.0,
+  "warmup_epochs": 1,
+  "seed": 42,
+  "grad_accum_steps": 1,
+
+  "focal_gamma": 2.0,
+  "focal_alpha": 0.5,
+  "stability_loss_weight": 0.25,
+  "interaction_loss_weight": 0.25,
+  "ssl_loss_weight": 0.0,
+  "contrastive_loss_weight": 0.0,
+  "label_smoothing": 0.05,
+  "label_smoothing_end": 0.01,
+
+  "dropout": 0.1,
+  "ema_decay": 0.999,
+  "use_ema": true,
+  "stochastic_depth_p": 0.0,
+  "feature_noise_std": 0.0,
+  "mixup_alpha": 0.0,
+
+  "use_smiles_augment": false,
+  "smiles_augment_p": 0.0,
+  "use_coord_jitter": false,
+  "coord_jitter_std": 0.0,
+
+  "use_swa": false,
+  "swa_start_fraction": 0.75,
+  "swa_lr": 5e-5,
+
+  "use_coords": true,
+
+  "val_fraction": 0.15,
+  "test_fraction": 0.10,
+  "num_workers": 0,
+  "pin_memory": false,
+
+  "checkpoint_dir": "checkpoints",
+  "save_every_n_epochs": 5,
+  "keep_last_n": 3,
+  "early_stop_patience": 5,
+  "early_stop_metric": "auroc",
+  "early_stop_mode": "max",
+  "overfit_window": 3,
+
+  "use_amp": false,
+  "amp_dtype": "bfloat16",
+
+  "fusion_dim": 64,
+  "esm_dim": 1280,
+  "graph_hidden": 64,
+  "num_graph_layers": 2,
+  "num_heads": 4,
+  "num_rbf": 20,
+  "cutoff": 8.0,
+
+  "use_masked_graph": false,
+  "use_contrastive": false,
+  "ssl_pretrain_epochs": 0,
+
+  "use_rf_stacker": true,
+  "rf_n_estimators": 50,
+  "rf_fp_bits": 1024,
+  "rf_max_depth": 8,
+
+  "alphafold_dir": "",
+  "af_extra_dim": 0,
+
+  "use_goss": false,
+  "goss_top_k": 6,
+
+  "training_mode": "fresh"
+}

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTACPred — Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><i class="fas fa-atom"></i></div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="/"><i class="fas fa-house"></i><span class="tooltip">Dashboard</span></a>
+    <a class="nav-item" href="/experiments"><i class="fas fa-flask"></i><span class="tooltip">Experiments</span></a>
+    <a class="nav-item" href="/history_page"><i class="fas fa-clock-rotate-left"></i><span class="tooltip">History</span></a>
+    <a class="nav-item" href="/datasets"><i class="fas fa-database"></i><span class="tooltip">Datasets</span></a>
+    <div class="sidebar-divider"></div>
+    <a class="nav-item" href="/reports_page"><i class="fas fa-chart-line"></i><span class="tooltip">Analytics</span></a>
+    <a class="nav-item active" href="/reports_page"><i class="fas fa-file-contract"></i><span class="tooltip">Reports</span></a>
+    <a class="nav-item" href="#"><i class="fas fa-book-open"></i><span class="tooltip">Documentation</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item" href="#"><i class="fas fa-gear"></i><span class="tooltip">Settings</span></a>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-icon"><i class="fas fa-atom"></i></div>
+      <span class="topbar-brand-name">PROTACPred</span>
+      <span class="topbar-brand-badge">v2.0</span>
+    </div>
+    <nav class="topbar-nav">
+      <a class="topbar-nav-item" href="/"><i class="fas fa-house"></i> Dashboard</a>
+      <a class="topbar-nav-item" href="/history_page"><i class="fas fa-clock-rotate-left"></i> History</a>
+      <a class="topbar-nav-item" href="/datasets"><i class="fas fa-database"></i> Datasets</a>
+      <a class="topbar-nav-item active" href="/reports_page"><i class="fas fa-file-contract"></i> Reports</a>
+    </nav>
+    <div class="topbar-actions">
+      <a href="/" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Prediction</a>
+      <div class="topbar-avatar">R</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title"><i class="fas fa-file-contract" style="color:var(--primary)"></i> Reports & Analytics</div>
+        <div class="page-subtitle">Generate and download prediction reports in multiple formats</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+
+      <!-- Generate Report -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-file-export"></i> Generate Report</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report Format</label>
+          <select id="report-format" class="form-control">
+            <option value="pdf">PDF (Formatted)</option>
+            <option value="csv">CSV (Spreadsheet)</option>
+            <option value="json">JSON (Raw Data)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Predictions to Include</label>
+          <select id="report-scope" class="form-control">
+            <option value="all">All predictions</option>
+            <option value="last10">Last 10 predictions</option>
+            <option value="degraders">Degraders only</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-full" id="btn-generate" onclick="generateReport()">
+          <i class="fas fa-download"></i> Generate &amp; Download
+        </button>
+        <div id="gen-progress" class="hidden" style="margin-top:10px">
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Generating…</span></div>
+            <div class="progress-track"><div class="progress-fill" id="gen-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-chart-bar"></i> Prediction Analytics</div>
+        </div>
+        <div id="analytics-loading" style="text-align:center;padding:20px">
+          <div class="spinner" style="margin:0 auto"></div>
+        </div>
+        <div id="analytics-content" class="hidden">
+          <div class="mol-detail-row" style="padding:8px 0;border-bottom:1px solid var(--border-light)">
+            <span class="mol-detail-key">Total Predictions</span>
+            <span class="mol-detail-val font-bold" id="a-total">—</span>
+          </div>
+          <div class="mol-detail-row" style="padding:8px 0;border-bottom:1px solid var(--border-light)">
+            <span class="mol-detail-key">Degraders Found</span>
+            <span class="mol-detail-val font-bold" style="color:var(--success)" id="a-degraders">—</span>
+          </div>
+          <div class="mol-detail-row" style="padding:8px 0;border-bottom:1px solid var(--border-light)">
+            <span class="mol-detail-key">Non-Degraders</span>
+            <span class="mol-detail-val font-bold" style="color:var(--danger)" id="a-nondeg">—</span>
+          </div>
+          <div class="mol-detail-row" style="padding:8px 0;border-bottom:1px solid var(--border-light)">
+            <span class="mol-detail-key">Average Score</span>
+            <span class="mol-detail-val font-bold" id="a-avgscore">—</span>
+          </div>
+          <div class="mol-detail-row" style="padding:8px 0">
+            <span class="mol-detail-key">Highest Score</span>
+            <span class="mol-detail-val font-bold" style="color:var(--success)" id="a-maxscore">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Existing Reports -->
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-folder-open"></i> Generated Reports</div>
+          <button onclick="loadReports()" class="btn btn-secondary btn-sm"><i class="fas fa-refresh"></i> Refresh</button>
+        </div>
+        <div id="reports-loading" style="text-align:center;padding:30px">
+          <div class="spinner" style="margin:0 auto"></div>
+        </div>
+        <div id="reports-empty" class="empty-state hidden">
+          <i class="fas fa-file-contract"></i>
+          <p>No reports generated yet. Use the form above to create one.</p>
+        </div>
+        <div id="reports-list" class="hidden">
+          <table class="history-table">
+            <thead>
+              <tr><th>Filename</th><th>Type</th><th>Size</th><th>Date</th><th>Download</th></tr>
+            </thead>
+            <tbody id="reports-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Scientific Reports (MD files) -->
+      {% if scientific_reports %}
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-book-open"></i> Scientific Reports</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+          {% for rpt in scientific_reports %}
+          <div style="background:var(--bg-card-alt);border-radius:var(--radius);padding:14px">
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px">
+              <i class="fas fa-file-alt" style="color:var(--primary)"></i> {{ rpt.name }}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)">{{ rpt.size }} · {{ rpt.date }}</div>
+            <a href="/download_report/{{ rpt.name }}" class="btn btn-secondary btn-sm w-full" style="margin-top:8px">
+              <i class="fas fa-download"></i> Download
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </main>
+
+  <footer class="footer">PROTACPred v2.0 · SE3AF v3.9.0 <i class="fas fa-heart"></i></footer>
+</div>
+</div>
+<div id="toast-container"></div>
+<script>
+function showToast(msg, type) {
+  var c = document.getElementById('toast-container');
+  if (!c) return;
+  var t = document.createElement('div');
+  t.className = 'toast' + (type && type !== 'info' ? ' toast-' + type : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3500);
+}
+
+function loadAnalytics() {
+  fetch('/history')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var preds = data.predictions || [];
+      document.getElementById('analytics-loading').classList.add('hidden');
+      document.getElementById('analytics-content').classList.remove('hidden');
+      var deg = preds.filter(function(p) { return p.label === 1; });
+      var scores = preds.map(function(p) { return p.degradation_likelihood || 0; });
+      var avg = scores.length ? (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1) : '—';
+      var max = scores.length ? Math.max.apply(null, scores).toFixed(1) : '—';
+      document.getElementById('a-total').textContent     = preds.length;
+      document.getElementById('a-degraders').textContent = deg.length;
+      document.getElementById('a-nondeg').textContent    = preds.length - deg.length;
+      document.getElementById('a-avgscore').textContent  = avg + (scores.length ? '%' : '');
+      document.getElementById('a-maxscore').textContent  = max + (scores.length ? '%' : '');
+    })
+    .catch(function() {
+      document.getElementById('analytics-loading').classList.add('hidden');
+      document.getElementById('analytics-content').classList.remove('hidden');
+    });
+}
+
+function loadReports() {
+  document.getElementById('reports-loading').classList.remove('hidden');
+  document.getElementById('reports-list').classList.add('hidden');
+  document.getElementById('reports-empty').classList.add('hidden');
+
+  fetch('/reports')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('reports-loading').classList.add('hidden');
+      var reports = data.reports || [];
+      if (!reports.length) {
+        document.getElementById('reports-empty').classList.remove('hidden');
+        return;
+      }
+      var tbody = document.getElementById('reports-tbody');
+      tbody.innerHTML = reports.map(function(r) {
+        var icons = { pdf: 'fa-file-pdf', csv: 'fa-file-csv', json: 'fa-file-code' };
+        return '<tr>' +
+          '<td><i class="fas ' + (icons[r.type] || 'fa-file') + '" style="color:var(--primary)"></i> ' + r.name + '</td>' +
+          '<td><span class="badge badge-blue">' + r.type.toUpperCase() + '</span></td>' +
+          '<td>' + Math.round(r.size/1024) + ' KB</td>' +
+          '<td style="font-size:11px">' + r.date + '</td>' +
+          '<td><a href="/download/' + encodeURIComponent(r.name) + '" class="btn btn-secondary btn-sm"><i class="fas fa-download"></i> Download</a></td>' +
+          '</tr>';
+      }).join('');
+      document.getElementById('reports-list').classList.remove('hidden');
+    })
+    .catch(function() {
+      document.getElementById('reports-loading').classList.add('hidden');
+      document.getElementById('reports-empty').classList.remove('hidden');
+    });
+}
+
+function generateReport() {
+  var fmt   = document.getElementById('report-format').value;
+  var scope = document.getElementById('report-scope').value;
+  var btn   = document.getElementById('btn-generate');
+  var prog  = document.getElementById('gen-progress');
+  var bar   = document.getElementById('gen-bar');
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating…';
+  prog.classList.remove('hidden');
+
+  var pct = 0;
+  var timer = setInterval(function() {
+    pct = Math.min(pct + 15, 85);
+    if (bar) bar.style.width = pct + '%';
+  }, 200);
+
+  fetch('/generate_report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ format: fmt, prediction_ids: ['all'], scope: scope })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('Server error');
+    return r.blob();
+  })
+  .then(function(blob) {
+    clearInterval(timer);
+    if (bar) bar.style.width = '100%';
+    var url = URL.createObjectURL(blob);
+    var a   = document.createElement('a');
+    a.href = url; a.download = 'protacpred_report.' + fmt; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Report downloaded!', 'success');
+    loadReports();
+  })
+  .catch(function(e) {
+    clearInterval(timer);
+    showToast('Report generation failed: ' + e.message, 'error');
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-download"></i> Generate & Download';
+    setTimeout(function() { prog.classList.add('hidden'); if(bar) bar.style.width='0%'; }, 1500);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() { loadAnalytics(); loadReports(); });
+</script>
+</body>
+</html>

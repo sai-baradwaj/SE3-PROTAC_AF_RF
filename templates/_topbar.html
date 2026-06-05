@@ -1,0 +1,21 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-title">{{ page_title | default('Dashboard') }}</span>
+    <nav class="topbar-nav">
+      <a href="/" class="{% if request.path == '/' %}active{% endif %}">Predict</a>
+      <a href="/history_page" class="{% if '/history' in request.path %}active{% endif %}">History</a>
+      <a href="/datasets" class="{% if '/datasets' in request.path %}active{% endif %}">Datasets</a>
+      <a href="/reports_page" class="{% if '/reports' in request.path %}active{% endif %}">Reports</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <div class="badge-version">SE3AF v3.9</div>
+    <div class="badge-model-status unloaded" id="model-status-badge">
+      <span class="dot"></span><span>Demo Mode</span>
+    </div>
+    <button class="btn-new-prediction" onclick="window.location='/'">
+      <i class="fas fa-plus"></i> New Prediction
+    </button>
+    <div class="user-avatar" title="User Profile">R</div>
+  </div>
+</header>

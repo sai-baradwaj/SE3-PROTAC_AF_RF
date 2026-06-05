@@ -1,0 +1,45 @@
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="fas fa-dna"></i></div>
+    <div>
+      <div class="logo-text">PROTACPred</div>
+      <div class="logo-sub">SE3AF v3.9.0</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Main</div>
+    <a class="nav-item {% if request.path == '/' %}active{% endif %}" href="/">
+      <span class="nav-icon"><i class="fas fa-home"></i></span><span>Dashboard</span>
+    </a>
+    <a class="nav-item {% if '/experiments' in request.path %}active{% endif %}" href="/experiments">
+      <span class="nav-icon"><i class="fas fa-flask"></i></span><span>Experiments</span>
+    </a>
+    <a class="nav-item {% if '/history' in request.path %}active{% endif %}" href="/history_page">
+      <span class="nav-icon"><i class="fas fa-clock-rotate-left"></i></span><span>History</span>
+    </a>
+    <a class="nav-item {% if '/datasets' in request.path %}active{% endif %}" href="/datasets">
+      <span class="nav-icon"><i class="fas fa-database"></i></span><span>Datasets</span>
+    </a>
+    <div class="nav-section-title" style="margin-top:8px">Tools</div>
+    <a class="nav-item {% if '/reports' in request.path %}active{% endif %}" href="/reports_page">
+      <span class="nav-icon"><i class="fas fa-chart-bar"></i></span><span>Analytics</span>
+    </a>
+    <a class="nav-item {% if '/reports' in request.path %}active{% endif %}" href="/reports_page">
+      <span class="nav-icon"><i class="fas fa-file-contract"></i></span><span>Reports</span>
+    </a>
+    <a class="nav-item" href="#"><span class="nav-icon"><i class="fas fa-book-open"></i></span><span>Documentation</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon"><i class="fas fa-gear"></i></span><span>Settings</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="model-status-card">
+      <div class="title">Model Status</div>
+      <div class="status" id="sidebar-model-status">Loading…</div>
+    </div>
+    <div style="margin-top:10px">
+      <button id="btn-load-model" class="btn btn-secondary btn-full btn-sm"
+              style="font-size:11px;color:var(--text-sidebar);border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.05)">
+        <i class="fas fa-play"></i> Load Model
+      </button>
+    </div>
+  </div>
+</aside>

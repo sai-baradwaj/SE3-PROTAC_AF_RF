@@ -1,0 +1,53 @@
+PROTACPred SE3AF v3.9 Report
+============================================================
+
+1. CC1=CC(NS(=O)(=O)C2=CC=C(C(=O)NCCOCCOCCO
+   Prediction: Non-Degrader  Score: 39.8%
+2. O=C1CCC(N2C(=O)C3=CC=CC(NCCOCCOCCOCCOCCO
+   Prediction: Non-Degrader  Score: 21.2%
+3. C=CC(=O)N1CCN(C2=NC(NCCC(=O)N(C)CCOCCOCC
+   Prediction: Non-Degrader  Score: 34.9%
+4. C=CC(=O)N1CCN(C2=NC(NCCCCN3CCN(CCCCNC4=C
+   Prediction: Non-Degrader  Score: 35.1%
+5. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Degrader  Score: 51.9%
+6. C=CC(=O)N1CCN(C2=NC(NCCC(=O)N(C)CCOCCOCC
+   Prediction: Non-Degrader  Score: 22.6%
+7. CC1=CC(NS(=O)(=O)C2=CC=C(C(=O)NCCOCCOCCO
+   Prediction: Non-Degrader  Score: 39.8%
+8. O=C1CCC(N2C(=O)C3=CC=CC(NCCOCCOCCOCCOCCO
+   Prediction: Non-Degrader  Score: 21.2%
+9. C=CC(=O)N1CCN(C2=NC(NCCC(=O)N(C)CCOCCOCC
+   Prediction: Non-Degrader  Score: 34.9%
+10. C=CC(=O)N1CCN(C2=NC(NCCCCN3CCN(CCCCNC4=C
+   Prediction: Non-Degrader  Score: 35.1%
+11. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Degrader  Score: 51.9%
+12. C=CC(=O)N1CCN(C2=NC(NCCC(=O)N(C)CCOCCOCC
+   Prediction: Non-Degrader  Score: 22.6%
+13. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Unknown  Score: 0.0%
+14. C=CC(=O)N1CCN(C2=NC(NCCCCN3CCN(CCCCNC4=C
+   Prediction: Unknown  Score: 0.0%
+15. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Unknown  Score: 0.0%
+16. CCC(=O)N[C@H]1CC[C@@H](N2C(=O)C=C(C)C3=C
+   Prediction: Unknown  Score: 0.0%
+17. CCC1=CC2=C(C=C1N1CCN(CC(=O)NCCNC3=CC=CC4
+   Prediction: Unknown  Score: 0.0%
+18. COC1=CC(Cl)=C(C2=CC(Cl)=CC=C2Cl)C=C1C(=O
+   Prediction: Unknown  Score: 0.0%
+19. O=C1CCC(N2CC3=C(NC(=O)COCCOCCOCCNCCNC4=N
+   Prediction: Unknown  Score: 0.0%
+20. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Unknown  Score: 0.0%
+21. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Unknown  Score: 0.0%
+22. CC1=CC(NS(=O)(=O)C2=CC=C(C(=O)NCCOCCOCCO
+   Prediction: Unknown  Score: 0.0%
+23. O=C1CCC(N2C(=O)C3=CC=CC(NCCOCCOCCOCCOCCO
+   Prediction: Unknown  Score: 0.0%
+24. C=CC(=O)N1CCN(C2=NC(NCCCCN3CCN(CCCCNC4=C
+   Prediction: Unknown  Score: 0.0%
+25. CC1=C(C2=CC=C(CNC(=O)[C@@H]3C[C@@H](O)CN
+   Prediction: Unknown  Score: 0.0%

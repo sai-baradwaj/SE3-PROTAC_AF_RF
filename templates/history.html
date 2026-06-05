@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTACPred — History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><i class="fas fa-atom"></i></div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="/"><i class="fas fa-house"></i><span class="tooltip">Dashboard</span></a>
+    <a class="nav-item" href="/experiments"><i class="fas fa-flask"></i><span class="tooltip">Experiments</span></a>
+    <a class="nav-item active" href="/history_page"><i class="fas fa-clock-rotate-left"></i><span class="tooltip">History</span></a>
+    <a class="nav-item" href="/datasets"><i class="fas fa-database"></i><span class="tooltip">Datasets</span></a>
+    <div class="sidebar-divider"></div>
+    <a class="nav-item" href="/reports_page"><i class="fas fa-chart-line"></i><span class="tooltip">Analytics</span></a>
+    <a class="nav-item" href="/reports_page"><i class="fas fa-file-contract"></i><span class="tooltip">Reports</span></a>
+    <a class="nav-item" href="#"><i class="fas fa-book-open"></i><span class="tooltip">Documentation</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a class="nav-item" href="#"><i class="fas fa-gear"></i><span class="tooltip">Settings</span></a>
+  </div>
+</aside>
+
+<div class="main-wrapper">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-icon"><i class="fas fa-atom"></i></div>
+      <span class="topbar-brand-name">PROTACPred</span>
+      <span class="topbar-brand-badge">v2.0</span>
+    </div>
+    <nav class="topbar-nav">
+      <a class="topbar-nav-item" href="/"><i class="fas fa-house"></i> Dashboard</a>
+      <a class="topbar-nav-item active" href="/history_page"><i class="fas fa-clock-rotate-left"></i> History</a>
+      <a class="topbar-nav-item" href="/datasets"><i class="fas fa-database"></i> Datasets</a>
+      <a class="topbar-nav-item" href="/reports_page"><i class="fas fa-file-contract"></i> Reports</a>
+    </nav>
+    <div class="topbar-actions">
+      <a href="/" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> New Prediction</a>
+      <div class="topbar-avatar">R</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title"><i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i> Prediction History</div>
+        <div class="page-subtitle">All previous PROTAC degradation predictions</div>
+      </div>
+      <div class="page-header-actions">
+        <button onclick="exportHistory()" class="btn btn-secondary btn-sm"><i class="fas fa-download"></i> Export CSV</button>
+        <button onclick="clearHistory()" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Clear All</button>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-bar" id="hist-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-card-icon purple"><i class="fas fa-atom"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val" id="h-total">—</div>
+          <div class="stat-card-label">Total Predictions</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val" id="h-degraders">—</div>
+          <div class="stat-card-label">Degraders</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon blue"><i class="fas fa-chart-bar"></i></div>
+        <div class="stat-card-body">
+          <div class="stat-card-val" id="h-avg-score">—</div>
+          <div class="stat-card-label">Avg Score</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="history-loading" style="text-align:center;padding:40px">
+        <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>
+        <p style="color:var(--text-muted)">Loading history…</p>
+      </div>
+      <div id="history-empty" class="empty-state hidden">
+        <i class="fas fa-clock-rotate-left"></i>
+        <p>No predictions yet. <a href="/" style="color:var(--primary)">Run your first prediction →</a></p>
+      </div>
+      <div id="history-content" class="hidden">
+        <div style="overflow-x:auto">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ID</th>
+                <th>SMILES</th>
+                <th>Prediction</th>
+                <th>Score</th>
+                <th>Confidence</th>
+                <th>Method</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">PROTACPred v2.0 · SE3AF v3.9.0 <i class="fas fa-heart"></i></footer>
+</div>
+</div>
+<div id="toast-container"></div>
+<script>
+function showToast(msg, type) {
+  var c = document.getElementById('toast-container');
+  if (!c) return;
+  var t = document.createElement('div');
+  t.className = 'toast' + (type && type !== 'info' ? ' toast-' + type : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3500);
+}
+
+function loadHistory() {
+  fetch('/history')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var preds = data.predictions || [];
+      document.getElementById('history-loading').classList.add('hidden');
+
+      // Stats
+      var degraders = preds.filter(function(p) { return p.label === 1; }).length;
+      var scores = preds.map(function(p) { return p.degradation_likelihood || 0; });
+      var avg = scores.length ? (scores.reduce(function(a,b){return a+b;}, 0) / scores.length).toFixed(1) : '—';
+      document.getElementById('h-total').textContent = preds.length;
+      document.getElementById('h-degraders').textContent = degraders;
+      document.getElementById('h-avg-score').textContent = avg + (scores.length ? '%' : '');
+
+      if (!preds.length) {
+        document.getElementById('history-empty').classList.remove('hidden');
+        return;
+      }
+
+      var tbody = document.getElementById('history-tbody');
+      tbody.innerHTML = preds.map(function(p, i) {
+        var score = (p.degradation_likelihood || 0).toFixed(1);
+        var cls   = p.label === 1 ? 'badge-green' : 'badge-red';
+        var lbl   = p.prediction || (p.label === 1 ? 'Degrader' : 'Non-Degrader');
+        var sm    = (p.protac_smiles || '').substring(0, 30) + ((p.protac_smiles||'').length > 30 ? '…' : '');
+        var dt    = p.date ? new Date(p.date).toLocaleString() : '—';
+        return '<tr>' +
+          '<td>' + (i+1) + '</td>' +
+          '<td class="mono">' + (p.prediction_id || '').substring(0,16) + '…</td>' +
+          '<td title="' + (p.protac_smiles||'') + '" style="font-family:monospace;font-size:11px">' + sm + '</td>' +
+          '<td><span class="badge ' + cls + '">' + lbl + '</span></td>' +
+          '<td><strong>' + score + '%</strong></td>' +
+          '<td>' + (p.confidence || 0).toFixed(1) + '%</td>' +
+          '<td style="font-size:11px">' + (p.method || '—') + '</td>' +
+          '<td style="font-size:11px">' + dt + '</td>' +
+          '<td><button class="btn btn-secondary btn-sm" onclick="rerun(\'' + (p.protac_smiles||'').replace(/'/g,"\\'") + '\')"><i class="fas fa-redo"></i></button></td>' +
+          '</tr>';
+      }).join('');
+
+      document.getElementById('history-content').classList.remove('hidden');
+    })
+    .catch(function(e) {
+      document.getElementById('history-loading').classList.add('hidden');
+      document.getElementById('history-empty').classList.remove('hidden');
+    });
+}
+
+function clearHistory() {
+  if (!confirm('Clear all prediction history?')) return;
+  fetch('/clear_history', { method: 'POST' })
+    .then(function() { showToast('History cleared', 'success'); loadHistory(); })
+    .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+}
+
+function exportHistory() {
+  window.location.href = '/generate_report?format=csv';
+}
+
+function rerun(smiles) {
+  window.location.href = '/?smiles=' + encodeURIComponent(smiles);
+}
+
+document.addEventListener('DOMContentLoaded', loadHistory);
+</script>
+</body>
+</html>
